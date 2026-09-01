@@ -73,7 +73,7 @@ function SyncOnReconnect() {
 }
 
 function AuthRouteHandler() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const segments = useSegments();
   const router = useRouter();
 
@@ -85,11 +85,27 @@ function AuthRouteHandler() {
     if (!isSignedIn && !inAuthGroup) {
       // Redirect to sign-in if user is not signed in and not in (auth)
       router.replace('/(auth)/sign-in');
-    } else if (isSignedIn && inAuthGroup) {
-      // Redirect to main tabs if signed in and in (auth)
-      router.replace('/(tabs)/lists');
+    } else if (isSignedIn) {
+      // Sync user to Neon database
+      if (user?.id && user.primaryEmailAddress?.emailAddress) {
+        fetch('/api/user/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clerkId: user.id,
+            email: user.primaryEmailAddress.emailAddress,
+            name: user.fullName || user.username || '',
+            avatarUrl: user.imageUrl || '',
+          }),
+        }).catch((err) => console.warn('[userSync] Error syncing user:', err));
+      }
+
+      if (inAuthGroup) {
+        // Redirect to main tabs if signed in and in (auth)
+        router.replace('/(tabs)/lists');
+      }
     }
-  }, [isLoaded, isSignedIn, segments]);
+  }, [isLoaded, isSignedIn, user?.id, segments]);
 
   return null;
 }
