@@ -1,3 +1,3 @@
-# Expo HAS CHANGED
+# Waypoint — AGENTS.md
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
+Waypoints app directory. Refer to root `CLAUDE.md`, `ARCHITECTURE.md`, `PRD.md`, and `DATABASE.md` for project instructions.

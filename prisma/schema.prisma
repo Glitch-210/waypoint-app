@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  clerkId      String   @unique
+  email        String   @unique
+  name         String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+
+  lists        List[]            @relation("OwnedLists")
+  collabOn     ListCollaborator[]
+}
+
+model List {
+  id            String   @id @default(uuid())
+  ownerId       String
+  owner         User     @relation("OwnedLists", fields: [ownerId], references: [id])
+  name          String
+  coverImageUrl String?
+  isOfflineCached Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  places        Place[]
+  collaborators ListCollaborator[]
+}
+
+model ListCollaborator {
+  listId    String
+  userId    String
+  role      String   @default("editor") // 'owner' | 'editor' | 'viewer'
+  invitedAt DateTime @default(now())
+
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@id([listId, userId])
+}
+
+model Place {
+  id           String   @id @default(uuid())
+  listId       String
+  list         List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  name         String
+  lat          Float?
+  lng          Float?
+  address      String?
+  notes        String?
+
+  sourceUrl    String?
+  sourceType   String   @default("manual") // 'instagram' | 'tiktok' | 'youtube' | 'maps' | 'manual'
+  photoUrl     String?
+
+  parseStatus  String   @default("manual") // 'parsed' | 'manual' | 'failed'
+  orderIndex   Int      @default(0)
+  inRoute      Boolean  @default(false)     // currently selected for active route
+
+  addedById    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([listId])
+}
+
+model OfflineTilePack {
+  id        String   @id @default(uuid())
+  listId    String
+  boundsJson String  // serialized bbox used to generate the pack
+  createdAt DateTime @default(now())
+
+  @@index([listId])
+}

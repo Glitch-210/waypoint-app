@@ -1,0 +1,66 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
+        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
+        "DATABASE_URL": "your_neon_database_url"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
+        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
+        "DATABASE_URL": "your_neon_database_url"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
+        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
+        "DATABASE_URL": "your_neon_database_url"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your_apple_id@email.com",
+        "ascAppId": "your_app_store_connect_app_id",
+        "appleTeamId": "YOUR_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}
