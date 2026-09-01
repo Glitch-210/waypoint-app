@@ -1,23 +1,43 @@
 import { getUserLists, createList, updateList, deleteList, seedOnboardingList } from '../../lib/services/listService';
 import { syncUserToNeon } from '../../lib/db/syncUser';
+import { prisma } from '../../lib/db/prisma';
 
-// GET /api/lists?userId=xxx
+/**
+ * Resolve Clerk ID → Neon User.id (UUID).
+ * Always use this before any Prisma query that takes userId.
+ */
+async function resolveNeonUserId(clerkId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
+  return user?.id ?? null;
+}
+
+// GET /api/lists?clerkId=xxx
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const userId = url.searchParams.get('userId');
+  const clerkId = url.searchParams.get('clerkId') || url.searchParams.get('userId');
 
-  if (!userId) {
-    return Response.json({ error: 'Missing userId' }, { status: 400 });
+  if (!clerkId) {
+    return Response.json({ error: 'Missing clerkId' }, { status: 400 });
   }
 
   try {
-    let lists = await getUserLists(userId);
+    const neonUserId = await resolveNeonUserId(clerkId);
+
+    if (!neonUserId) {
+      // User not yet synced — return empty list (they haven't signed in & synced yet)
+      return Response.json({ lists: [] });
+    }
+
+    let lists = await getUserLists(neonUserId);
 
     // Cold-start onboarding: seed sample list for brand-new users
     if (lists.length === 0) {
-      const seeded = await seedOnboardingList(userId);
+      const seeded = await seedOnboardingList(neonUserId);
       if (seeded) {
-        lists = await getUserLists(userId);
+        lists = await getUserLists(neonUserId);
       }
     }
 
@@ -28,22 +48,30 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/lists  { name, ownerId, clerkId, email, displayName, avatarUrl }
+// POST /api/lists  { name, clerkId, email, displayName, avatarUrl }
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, ownerId, clerkId, email, displayName, avatarUrl } = body;
+    const { name, clerkId, email, displayName, avatarUrl } = body;
 
-    if (!name || !ownerId) {
-      return Response.json({ error: 'Missing name or ownerId' }, { status: 400 });
+    if (!name || !clerkId) {
+      return Response.json({ error: 'Missing name or clerkId' }, { status: 400 });
     }
 
-    // Ensure user exists in DB before creating a list
-    if (clerkId && email) {
-      await syncUserToNeon({ clerkId, email, name: displayName, avatarUrl });
+    if (!email) {
+      return Response.json({ error: 'Missing email for user sync' }, { status: 400 });
     }
 
-    const list = await createList({ name, ownerId });
+    // 1. Sync/upsert user to Neon first — returns the Neon User with UUID id
+    const neonUser = await syncUserToNeon({
+      clerkId,
+      email,
+      name: displayName,
+      avatarUrl,
+    });
+
+    // 2. Create the list using the Neon UUID (not Clerk ID)
+    const list = await createList({ name, ownerId: neonUser.id });
     return Response.json({ list }, { status: 201 });
   } catch (err: any) {
     console.error('[POST /api/lists]', err);
@@ -51,17 +79,22 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH /api/lists  { listId, userId, name, coverImageUrl }
+// PATCH /api/lists  { listId, clerkId, name, coverImageUrl }
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { listId, userId, name, coverImageUrl } = body;
+    const { listId, clerkId, name, coverImageUrl } = body;
 
-    if (!listId || !userId) {
-      return Response.json({ error: 'Missing listId or userId' }, { status: 400 });
+    if (!listId || !clerkId) {
+      return Response.json({ error: 'Missing listId or clerkId' }, { status: 400 });
     }
 
-    const updated = await updateList(listId, userId, { name, coverImageUrl });
+    const neonUserId = await resolveNeonUserId(clerkId);
+    if (!neonUserId) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const updated = await updateList(listId, neonUserId, { name, coverImageUrl });
     return Response.json({ list: updated });
   } catch (err: any) {
     console.error('[PATCH /api/lists]', err);
@@ -69,17 +102,22 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE /api/lists  { listId, userId }
+// DELETE /api/lists  { listId, clerkId }
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { listId, userId } = body;
+    const { listId, clerkId } = body;
 
-    if (!listId || !userId) {
-      return Response.json({ error: 'Missing listId or userId' }, { status: 400 });
+    if (!listId || !clerkId) {
+      return Response.json({ error: 'Missing listId or clerkId' }, { status: 400 });
     }
 
-    const deleted = await deleteList(listId, userId);
+    const neonUserId = await resolveNeonUserId(clerkId);
+    if (!neonUserId) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const deleted = await deleteList(listId, neonUserId);
     return Response.json({ list: deleted });
   } catch (err: any) {
     console.error('[DELETE /api/lists]', err);

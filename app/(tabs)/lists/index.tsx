@@ -30,7 +30,7 @@ export default function PlaylistsScreen() {
       if (!isLoaded || !user?.id) return;
       try {
         setIsLoading(true);
-        const res = await fetch(`/api/lists?userId=${encodeURIComponent(user.id)}`);
+        const res = await fetch(`/api/lists?clerkId=${encodeURIComponent(user.id)}`);
         if (res.ok) {
           const data = await res.json();
           setLists(data.lists || []);
@@ -53,7 +53,6 @@ export default function PlaylistsScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newListName.trim(),
-          ownerId: user.id,
           clerkId: user.id,
           email: user.primaryEmailAddress?.emailAddress || '',
           displayName: user.fullName || user.username || '',
