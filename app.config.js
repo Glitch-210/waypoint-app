@@ -29,6 +29,7 @@ export default {
       "output": "server"
     },
     "plugins": [
+      "expo-web-browser",
       [
         "expo-share-intent",
         {
