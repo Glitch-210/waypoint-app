@@ -7,7 +7,6 @@ import { PlaceCard } from '../../../../components/places/PlaceCard';
 import { colors } from '../../../../constants/colors';
 import { typography } from '../../../../constants/typography';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getPlacesForList, togglePlaceInRoute } from '../../../../lib/services/placeService';
 import { getRoute, RouteGeometry } from '../../../../lib/services/mapboxService';
 import { downloadTilePack, deleteTilePack } from '../../../../lib/services/offlineTilesService';
 import { cachePlaces, getCachedPlaces, setListOfflineCached } from '../../../../lib/db/offlineCache';
@@ -51,10 +50,14 @@ function ListDetailScreenContent({ id }: { id: string }) {
     try {
       setLoading(true);
       if (isConnected) {
-        // Online: fetch from Neon, then write-through to SQLite
-        const data = await getPlacesForList(id, user.id);
-        setPlaces(data as any);
-        await cachePlaces(data as any);
+        // Online: fetch from Neon via API route, then write-through to SQLite
+        const res = await fetch(`/api/places?listId=${encodeURIComponent(id)}&userId=${encodeURIComponent(user.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const placeList = data.places || [];
+          setPlaces(placeList as any);
+          await cachePlaces(placeList as any);
+        }
       } else {
         // Offline: read from SQLite cache
         const cached = await getCachedPlaces(id);
@@ -127,7 +130,11 @@ function ListDetailScreenContent({ id }: { id: string }) {
     updatePlaceInStore(placeId, { inRoute: newInRoute });
     
     try {
-      await togglePlaceInRoute(placeId, newInRoute, user.id);
+      await fetch('/api/places', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId, inRoute: newInRoute, userId: user.id }),
+      });
       broadcast({ type: 'REFRESH_PLACES' });
     } catch (err) {
       // Revert if failed

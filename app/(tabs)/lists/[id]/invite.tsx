@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUser } from '@clerk/expo';
-import { addCollaborator } from '../../../../lib/services/listService';
 import { colors } from '../../../../constants/colors';
 import { typography } from '../../../../constants/typography';
 
@@ -31,7 +30,14 @@ export default function InviteScreen() {
       }
 
       try {
-        await addCollaborator(id, user.id, 'editor');
+        const res = await fetch('/api/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listId: id, userId: user.id, role: 'editor' }),
+        });
+        if (!res.ok) {
+          throw new Error('Failed to join list');
+        }
         setStatus('success');
         
         // Wait a brief moment to show success, then redirect to list

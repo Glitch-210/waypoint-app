@@ -16,7 +16,6 @@ import { PlaylistCard } from '../../../components/lists/PlaylistCard';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getUserLists, createList, seedOnboardingList } from '../../../lib/services/listService';
 
 export default function PlaylistsScreen() {
   const { lists, setLists, addList } = useListStore();
@@ -31,17 +30,11 @@ export default function PlaylistsScreen() {
       if (!isLoaded || !user?.id) return;
       try {
         setIsLoading(true);
-        let fetched = await getUserLists(user.id);
-
-        // Cold-start onboarding: seed sample list for brand-new users
-        if (fetched.length === 0) {
-          const seeded = await seedOnboardingList(user.id);
-          if (seeded) {
-            fetched = await getUserLists(user.id);
-          }
+        const res = await fetch(`/api/lists?userId=${encodeURIComponent(user.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLists(data.lists || []);
         }
-
-        setLists(fetched as any);
       } catch (err) {
         console.error('Failed to load lists:', err);
       } finally {
@@ -55,8 +48,24 @@ export default function PlaylistsScreen() {
   const handleCreateList = async () => {
     if (!newListName.trim() || !user?.id) return;
     try {
-      const created = await createList({ name: newListName.trim(), ownerId: user.id });
-      addList(created as any);
+      const res = await fetch('/api/lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newListName.trim(),
+          ownerId: user.id,
+          clerkId: user.id,
+          email: user.primaryEmailAddress?.emailAddress || '',
+          displayName: user.fullName || user.username || '',
+          avatarUrl: user.imageUrl || '',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.list) {
+          addList(data.list);
+        }
+      }
       setNewListName('');
       setModalVisible(false);
     } catch (err) {

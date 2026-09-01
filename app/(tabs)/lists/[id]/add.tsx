@@ -85,17 +85,27 @@ export default function AddPlaceScreen() {
     if (!id || !user?.id) return;
     try {
       setIsSaving(true);
-      const newPlace = await createPlace(user.id, {
-        listId: id,
-        name: placeData.name,
-        address: placeData.address,
-        lat: placeData.locationInfo?.lat,
-        lng: placeData.locationInfo?.lng,
-        notes: placeData.notes,
-        sourceType: placeData.sourceType,
-        parseStatus: (placeData.locationInfo?.lat && placeData.locationInfo?.lat !== 0) ? 'parsed' : 'manual',
+      const res = await fetch('/api/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          listId: id,
+          name: placeData.name,
+          address: placeData.address,
+          lat: placeData.locationInfo?.lat,
+          lng: placeData.locationInfo?.lng,
+          notes: placeData.notes,
+          sourceType: placeData.sourceType,
+          parseStatus: (placeData.locationInfo?.lat && placeData.locationInfo?.lat !== 0) ? 'parsed' : 'manual',
+        }),
       });
-      addPlace(newPlace as any);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.place) {
+          addPlace(data.place as any);
+        }
+      }
       router.back();
     } catch (err) {
       console.error('Failed to save parsed place', err);
@@ -110,17 +120,27 @@ export default function AddPlaceScreen() {
 
     try {
       setIsSaving(true);
-      const newPlace = await createPlace(user.id, {
-        listId: id,
-        name,
-        address: selectedFeature?.place_name || query,
-        lat: selectedFeature?.center[1],
-        lng: selectedFeature?.center[0],
-        notes,
-        sourceType: 'manual',
-        parseStatus: selectedFeature ? 'parsed' : 'manual',
+      const res = await fetch('/api/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          listId: id,
+          name,
+          address: selectedFeature?.place_name || query,
+          lat: selectedFeature?.center[1],
+          lng: selectedFeature?.center[0],
+          notes,
+          sourceType: 'manual',
+          parseStatus: selectedFeature ? 'parsed' : 'manual',
+        }),
       });
-      addPlace(newPlace as any);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.place) {
+          addPlace(data.place as any);
+        }
+      }
       router.back();
     } catch (err) {
       console.error('Failed to save place', err);
