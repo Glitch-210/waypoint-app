@@ -5,7 +5,6 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 import { useShareIntent } from 'expo-share-intent';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useListStore } from '../store/useListStore';
-import { getPlacesForList } from '../lib/services/placeService';
 import { cachePlaces } from '../lib/db/offlineCache';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -36,7 +35,7 @@ function ShareIntentHandler() {
     }
   }, [hasShareIntent, shareIntent, isLoaded, isSignedIn, segments]);
 
-  return <Slot />;
+  return null;
 }
 
 function SyncOnReconnect() {
@@ -54,13 +53,16 @@ function SyncOnReconnect() {
 
     if (!wasOffline.current || !user?.id) return;
 
-    // Reconnected — re-sync all cached lists
+    // Reconnected — re-sync all cached lists via API route
     wasOffline.current = false;
     const cachedLists = lists.filter((l) => l.isOfflineCached);
     cachedLists.forEach(async (list) => {
       try {
-        const fresh = await getPlacesForList(list.id, user.id);
-        await cachePlaces(fresh as any);
+        const res = await fetch(`/api/places?listId=${encodeURIComponent(list.id)}&userId=${encodeURIComponent(user.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          await cachePlaces(data.places || []);
+        }
       } catch (err) {
         console.warn('[sync] Failed to re-sync list', list.id, err);
       }
@@ -70,12 +72,36 @@ function SyncOnReconnect() {
   return null;
 }
 
+function AuthRouteHandler() {
+  const { isLoaded, isSignedIn } = useUser();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!isSignedIn && !inAuthGroup) {
+      // Redirect to sign-in if user is not signed in and not in (auth)
+      router.replace('/(auth)/sign-in');
+    } else if (isSignedIn && inAuthGroup) {
+      // Redirect to main tabs if signed in and in (auth)
+      router.replace('/(tabs)/lists');
+    }
+  }, [isLoaded, isSignedIn, segments]);
+
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
+        <AuthRouteHandler />
         <SyncOnReconnect />
         <ShareIntentHandler />
+        <Slot />
       </ClerkLoaded>
     </ClerkProvider>
   );
