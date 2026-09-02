@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, Platform } from 'react-native';
 import { colors } from '../../constants/colors';
 
+import * as MapLibre from '@maplibre/maplibre-react-native';
+
 const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 
 // Default location: San Francisco [Longitude, Latitude]
@@ -26,7 +28,9 @@ export default function MapScreen() {
   }
 
   // Dynamically require native components on Android and iOS only
-  const { Map, Camera, Marker } = require('@maplibre/maplibre-react-native');
+  const maplibre = MapLibre;
+  console.log('MapLibre import result:', maplibre);
+  const { Map, Camera, Marker } = maplibre || {};
 
   const styleUrl = MAPTILER_API_KEY
     ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_API_KEY}`

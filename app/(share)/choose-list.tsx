@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUser } from '@clerk/expo';
-import { getUserLists } from '../../lib/services/listService';
-import { List } from '@prisma/client';
+import { List } from '../../types';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -24,8 +23,10 @@ export default function ChooseListScreen() {
   const loadLists = async () => {
     try {
       setIsLoading(true);
-      const data = await getUserLists(user!.id);
-      setLists(data);
+      const res = await fetch(`/api/lists?clerkId=${encodeURIComponent(user!.id)}`);
+      if (!res.ok) throw new Error('Failed to fetch lists');
+      const data = await res.json();
+      setLists(data.lists || []);
     } catch (err) {
       console.error(err);
       alert('Failed to load lists');
