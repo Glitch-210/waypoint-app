@@ -18,7 +18,7 @@
 - [x] Product decision: standalone app (not a Karvaan feature)
 - [x] PRD — MVP scope locked
 - [x] Design system — reusing Karvaan tokens
-- [x] Architecture — stack decided (Expo, Clerk, Neon/Prisma, R2, Liveblocks, Mapbox)
+- [x] Architecture — stack decided (Expo, Custom Google OAuth2, Neon/Prisma, R2, Liveblocks, Mapbox)
 - [x] Database schema drafted (Prisma)
 
 ---
@@ -28,7 +28,7 @@
 ### Phase 1 — Project Setup
 - [ ] `npx create-expo-app waypoint-app`
 - [ ] Expo Router + NativeWind + Zustand installed
-- [ ] Clerk configured (new Clerk project, separate from Karvaan)
+- [ ] Google Cloud OAuth2 Client IDs configured (Web, iOS, Android) + `JWT_SECRET` set in `.env`
 - [ ] Neon project created, `DATABASE_URL` set
 - [ ] Prisma initialized, schema from `DATABASE.md` migrated
 - [ ] Cloudflare R2 bucket created + credentials
@@ -38,9 +38,9 @@
 - [ ] `.env.template` created
 
 ### Phase 2 — Auth + Core Data Model
-- [ ] Sign-in/sign-up screens (Clerk)
-- [ ] User synced to Neon on first sign-in (Clerk webhook → Prisma upsert)
-- [ ] Lists CRUD (create/rename/delete) — API routes + Prisma queries with ownership checks
+- [x] Sign-in screen (Google OAuth2 via expo-auth-session + PKCE)
+- [x] User upserted in Neon on first Google sign-in (backend `/api/auth/google` → `syncUserToNeon` → JWT issued)
+- [x] Lists CRUD (create/rename/delete) — API routes + Prisma queries with ownership checks via JWT `requireAuth()`
 
 ### Phase 3 — Places + Manual Entry
 - [ ] Add place manually (Mapbox place autocomplete search)
@@ -104,6 +104,7 @@
 | 1 | IG/TikTok may block OG-tag scraping (ToS/technical) | Open — manual fallback is the mitigation, not a fix |
 | 2 | Liveblocks + Neon write-through consistency (race conditions on simultaneous edits) | Open — design write-through pattern carefully in Phase 7 |
 | 3 | Cold-start empty app | Open — seed list planned for Phase 9, could pull earlier if needed |
+| 4 | **Custom JWT session management** — 30-day non-rotating token, no server-side revocation | **Tradeoff accepted** — previously owned by Clerk. Revocation (e.g. compromised token) requires deleting the token from SecureStore client-side only; a server-side token blocklist or shorter expiry + refresh token flow should be added before public launch |
 
 ---
 

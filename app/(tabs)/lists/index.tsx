@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useUser } from '@clerk/expo';
+import { useAuth } from '../../../context/AuthContext';
+import { authFetch } from '../../../lib/session';
 import { useListStore } from '../../../store/useListStore';
 import { PlaylistCard } from '../../../components/lists/PlaylistCard';
 import { colors } from '../../../constants/colors';
@@ -19,7 +20,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function PlaylistsScreen() {
   const { lists, setLists, addList } = useListStore();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth();
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -30,7 +31,7 @@ export default function PlaylistsScreen() {
       if (!isLoaded || !user?.id) return;
       try {
         setIsLoading(true);
-        const res = await fetch(`/api/lists?clerkId=${encodeURIComponent(user.id)}`);
+        const res = await authFetch('/api/lists');
         if (res.ok) {
           const data = await res.json();
           setLists(data.lists || []);
@@ -48,16 +49,9 @@ export default function PlaylistsScreen() {
   const handleCreateList = async () => {
     if (!newListName.trim() || !user?.id) return;
     try {
-      const res = await fetch('/api/lists', {
+      const res = await authFetch('/api/lists', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newListName.trim(),
-          clerkId: user.id,
-          email: user.primaryEmailAddress?.emailAddress || '',
-          displayName: user.fullName || user.username || '',
-          avatarUrl: user.imageUrl || '',
-        }),
+        body: JSON.stringify({ name: newListName.trim() }),
       });
       if (res.ok) {
         const data = await res.json();

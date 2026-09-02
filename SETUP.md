@@ -11,7 +11,7 @@ You may have **two copies** of this project — keep track of which is which:
 | Location | What it is |
 |---|---|
 | `D:\Karvaan\waypoint-app` (local, built step-by-step in chat) | Basic Expo + Router scaffold only, tested working in Expo Go |
-| `github.com/Glitch-210/waypoint-app` | Further-along version with Clerk, Prisma, Liveblocks, Mapbox SDK, Share Intent, SQLite already in `package.json` — likely built via a separate Claude Code session |
+| `github.com/Glitch-210/waypoint-app` | Further-along version with Google OAuth2, Prisma, Liveblocks, Mapbox SDK, Share Intent, SQLite already in `package.json` — likely built via a separate Claude Code session |
 
 ⚠️ **Decide which one is canonical before continuing.** The GitHub version already has native modules installed, which means it **cannot run in Expo Go** — it requires an EAS dev-client build from the start (see §4).
 
@@ -21,7 +21,7 @@ You may have **two copies** of this project — keep track of which is which:
 
 | Service | Used for | Roadmap Phase |
 |---|---|---|
-| **Clerk** | Auth (sign-in/sign-up) | Phase 2 |
+| **Google Cloud Console** | OAuth 2.0 Client IDs for sign-in | Phase 2 |
 | **Neon** | Postgres database (via Prisma) | Phase 2 |
 | **Mapbox** | Map rendering, geocoding, directions | Phase 3, 4, 6 |
 | **Cloudinary** *(switched from Cloudflare R2)* | Image storage (place photos, list covers) | Phase 3, 4 |
@@ -33,9 +33,11 @@ You may have **two copies** of this project — keep track of which is which:
 ## 3. Environment Variables (`.env`)
 
 ```env
-# --- Clerk (Auth) ---
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
+# --- Google OAuth2 (Auth) ---
+EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID=   # Web OAuth 2.0 Client ID (used by expo-auth-session on Expo Go)
+GOOGLE_OAUTH_IOS_CLIENT_ID=              # iOS OAuth 2.0 Client ID  (server-side only — verifyIdToken audience)
+GOOGLE_OAUTH_ANDROID_CLIENT_ID=          # Android OAuth 2.0 Client ID (server-side only)
+JWT_SECRET=                              # Long random secret; generate with: openssl rand -hex 64
 
 # --- Neon / Prisma (Database) ---
 DATABASE_URL=
@@ -54,6 +56,16 @@ CLOUDINARY_API_SECRET=
 EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=
 LIVEBLOCKS_SECRET_KEY=
 ```
+
+### Setting up Google OAuth2
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials.
+2. Create an **OAuth 2.0 Client ID** for each platform:
+   - **Web** — Authorized redirect URIs: `https://auth.expo.io/@<your-expo-username>/waypoint-app` (for Expo Go). This ID goes in `EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID`.
+   - **iOS** — Bundle ID: `com.waypoint.app`. This ID goes in `GOOGLE_OAUTH_IOS_CLIENT_ID` (server-side only).
+   - **Android** — Package: `com.waypoint.app`. Provide your SHA-1 fingerprint. This ID goes in `GOOGLE_OAUTH_ANDROID_CLIENT_ID` (server-side only).
+3. Enable the **Google People API** (needed to return `profile` + `email` scopes).
+4. Generate `JWT_SECRET`: `openssl rand -hex 64` — paste the output into `.env`.
 
 **Rules:**
 - Anything prefixed `EXPO_PUBLIC_` gets bundled into the client app — **never put a secret there**.
@@ -94,7 +106,7 @@ Only re-run `eas build` when adding/changing a **native** dependency — not for
 | Phase | What's built | Key packages/services | Needs EAS build? |
 |---|---|---|---|
 | 1 — Setup | Project scaffold, accounts, env vars | expo, expo-router, nativewind, zustand | No |
-| 2 — Auth + Data | Sign-in, user sync, Lists CRUD | @clerk/expo, @prisma/client, Neon | No |
+| 2 — Auth + Data | Sign-in, user sync, Lists CRUD | expo-auth-session, google-auth-library, jsonwebtoken, @prisma/client, Neon | No |
 | 3 — Manual Places | Place search, place cards | Mapbox Geocoding API (plain fetch) | No |
 | 4 — Link Ingestion | OG-tag scrape, geocode, confirm sheet | cheerio, Mapbox Geocoding API | No |
 | 5 — Native Share | Share-sheet target (iOS/Android) | expo-share-intent | **Yes** |
@@ -133,7 +145,8 @@ Only re-run `eas build` when adding/changing a **native** dependency — not for
 ## 8. Next Setup Steps (unchecked)
 
 - [ ] Confirm canonical project copy (local vs. GitHub repo)
-- [ ] Clerk project created + keys in `.env`
+- [ ] Google Cloud OAuth2 Client IDs created (Web, iOS, Android) + authorized redirect URIs registered
+- [ ] `JWT_SECRET` generated and set in `.env`
 - [ ] Neon project created + `DATABASE_URL` in `.env`, `prisma migrate dev` run
 - [ ] Mapbox account + all 3 tokens in `.env`
 - [ ] Cloudinary account + credentials in `.env`

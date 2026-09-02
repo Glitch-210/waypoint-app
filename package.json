@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@clerk/expo": "^4.6.1",
     "@expo/metro-runtime": "~57.0.14",
     "@expo/vector-icons": "^15.1.1",
     "@liveblocks/client": "^3.24.1",
@@ -22,12 +21,15 @@
     "expo-sqlite": "^57.0.2",
     "expo-status-bar": "~57.0.1",
     "expo-web-browser": "~57.0.2",
+    "google-auth-library": "^9.0.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react-native": "^1.38.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-svg": "^15.15.5",
-    "react-native-web": "^0.21.2"
+    "react-native-web": "^0.21.2",
+    "zustand": "^5.0.15"
   },
   "scripts": {
     "start": "expo start",
@@ -37,6 +39,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/react": "^19.2.18",
     "@types/react-native": "^0.72.8",
     "prisma": "5.10.0",

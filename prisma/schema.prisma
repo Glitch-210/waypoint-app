@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id           String   @id @default(uuid())
-  clerkId      String   @unique
+  googleId     String   @unique  // Google sub claim from id_token
   email        String   @unique
   name         String?
   avatarUrl    String?

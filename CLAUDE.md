@@ -21,7 +21,7 @@ Waypoint — save travel places from any link/reel into shareable "playlists," v
 
 ## Tech Stack (Locked — Do Not Change Without Updating ARCHITECTURE.md)
 
-Expo (React Native, iOS + Android) · Expo Router · Clerk auth · Neon Postgres + Prisma · Cloudflare R2 · Liveblocks (collab) · Mapbox (maps/geocode/directions) · Zustand · NativeWind.
+Expo (React Native, iOS + Android) · Expo Router · Custom Google OAuth2 (expo-auth-session + backend JWT) · Neon Postgres + Prisma · Cloudflare R2 · Liveblocks (collab) · Mapbox (maps/geocode/directions) · Zustand · NativeWind.
 
 **No Supabase. No Next.js/web. No AI/ML in MVP.**
 
