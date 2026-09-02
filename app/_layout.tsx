@@ -1,34 +1,24 @@
 import React, { useEffect, useRef } from 'react';
-import { ClerkProvider, ClerkLoaded, useUser } from '@clerk/expo';
-import { tokenCache } from '../lib/auth/clerk';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useShareIntent } from 'expo-share-intent';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useListStore } from '../store/useListStore';
 import { cachePlaces } from '../lib/db/offlineCache';
-
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-
-if (!publishableKey) {
-  throw new Error(
-    'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env',
-  );
-}
+import { authFetch } from '../lib/session';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 function ShareIntentHandler() {
   const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
   const router = useRouter();
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const segments = useSegments();
 
   useEffect(() => {
-    // Only handle intent if the user is signed in and we have a valid share intent
     if (isLoaded && isSignedIn && hasShareIntent && shareIntent.text) {
-      // Don't route if we are already in the share flow to avoid loops
       if (segments[0] !== '(share)') {
         router.push({
           pathname: '/(share)/choose-list',
-          params: { sharedUrl: shareIntent.text }
+          params: { sharedUrl: shareIntent.text },
         });
         resetShareIntent();
       }
@@ -40,12 +30,11 @@ function ShareIntentHandler() {
 
 function SyncOnReconnect() {
   const { isConnected } = useNetworkStatus();
-  const { user } = useUser();
+  const { user } = useAuth();
   const { lists } = useListStore();
   const wasOffline = useRef(false);
 
   useEffect(() => {
-    // Track offline → online transitions
     if (!isConnected) {
       wasOffline.current = true;
       return;
@@ -58,7 +47,7 @@ function SyncOnReconnect() {
     const cachedLists = lists.filter((l) => l.isOfflineCached);
     cachedLists.forEach(async (list) => {
       try {
-        const res = await fetch(`/api/places?listId=${encodeURIComponent(list.id)}&userId=${encodeURIComponent(user.id)}`);
+        const res = await authFetch(`/api/lists?listId=${encodeURIComponent(list.id)}`);
         if (res.ok) {
           const data = await res.json();
           await cachePlaces(data.places || []);
@@ -73,7 +62,7 @@ function SyncOnReconnect() {
 }
 
 function AuthRouteHandler() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -83,42 +72,22 @@ function AuthRouteHandler() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!isSignedIn && !inAuthGroup) {
-      // Redirect to sign-in if user is not signed in and not in (auth)
       router.replace('/(auth)/sign-in');
-    } else if (isSignedIn) {
-      // Sync user to Neon database
-      if (user?.id && user.primaryEmailAddress?.emailAddress) {
-        fetch('/api/user/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clerkId: user.id,
-            email: user.primaryEmailAddress.emailAddress,
-            name: user.fullName || user.username || '',
-            avatarUrl: user.imageUrl || '',
-          }),
-        }).catch((err) => console.warn('[userSync] Error syncing user:', err));
-      }
-
-      if (inAuthGroup) {
-        // Redirect to main tabs if signed in and in (auth)
-        router.replace('/(tabs)/lists');
-      }
+    } else if (isSignedIn && inAuthGroup) {
+      router.replace('/(tabs)/lists');
     }
-  }, [isLoaded, isSignedIn, user?.id, segments]);
+  }, [isLoaded, isSignedIn, segments]);
 
   return null;
 }
 
 export default function RootLayout() {
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <AuthRouteHandler />
-        <SyncOnReconnect />
-        <ShareIntentHandler />
-        <Slot />
-      </ClerkLoaded>
-    </ClerkProvider>
+    <AuthProvider>
+      <AuthRouteHandler />
+      <SyncOnReconnect />
+      <ShareIntentHandler />
+      <Slot />
+    </AuthProvider>
   );
 }

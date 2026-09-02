@@ -1,7 +1,14 @@
+import { requireAuth } from '../../lib/auth/jwt';
 import { searchPlaces } from '../../lib/utils/mapbox';
 import * as cheerio from 'cheerio';
 
 export async function GET(request: Request) {
+  try {
+    await requireAuth(request); // must be signed in to use the parse endpoint
+  } catch (err) {
+    if (err instanceof Response) throw err;
+  }
+
   const url = new URL(request.url);
   const targetUrl = url.searchParams.get('url');
 

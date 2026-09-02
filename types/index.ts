@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  clerkId: string;
+  googleId: string;
   email: string;
   name?: string;
   avatarUrl?: string;
