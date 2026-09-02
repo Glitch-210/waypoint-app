@@ -14,7 +14,7 @@
       },
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
-        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_MAPTILER_API_KEY": "your_maptiler_api_key",
         "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
         "DATABASE_URL": "your_neon_database_url"
       }
@@ -29,7 +29,7 @@
       },
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
-        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_MAPTILER_API_KEY": "your_maptiler_api_key",
         "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
         "DATABASE_URL": "your_neon_database_url"
       }
@@ -44,7 +44,7 @@
       },
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "your_clerk_publishable_key",
-        "EXPO_PUBLIC_MAPBOX_TOKEN": "your_mapbox_token",
+        "EXPO_PUBLIC_MAPTILER_API_KEY": "your_maptiler_api_key",
         "EXPO_PUBLIC_LIVEBLOCKS_PUBLIC_KEY": "your_liveblocks_public_key",
         "DATABASE_URL": "your_neon_database_url"
       }

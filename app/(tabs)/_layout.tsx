@@ -24,6 +24,15 @@ export default function TabLayout() {
         options={{
           title: 'My Lists',
           tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="format-list-bulleted" size={size || 24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="map" size={size || 24} color={color} />
           ),
         }}

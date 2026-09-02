@@ -1,4 +1,4 @@
-// Web stub — @rnmapbox/maps offline tile packs are a mobile-only feature.
+// Web stub — @maplibre/maplibre-react-native offline tile packs are a mobile-only feature.
 // All functions are no-ops so the web bundle compiles cleanly.
 
 import { Place } from '../../types';

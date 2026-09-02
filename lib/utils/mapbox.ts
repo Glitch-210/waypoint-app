@@ -8,28 +8,34 @@ export interface MapboxFeature {
 export async function searchPlaces(query: string): Promise<MapboxFeature[]> {
   if (!query) return [];
 
-  const token = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
+  const token = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
   
   if (!token) {
-    console.warn('EXPO_PUBLIC_MAPBOX_TOKEN is missing. Returning mock data.');
+    console.warn('EXPO_PUBLIC_MAPTILER_API_KEY is missing. Returning mock data.');
     return getMockPlaces(query);
   }
 
   try {
     const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-        query
-      )}.json?access_token=${token}&autocomplete=true&limit=5&country=in`
+      `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${token}&limit=5`
     );
 
     if (!response.ok) {
-      throw new Error(`Mapbox API error: ${response.status}`);
+      throw new Error(`MapTiler Geocoding API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.features as MapboxFeature[];
+    if (data.features) {
+      return data.features.map((f: any) => ({
+        id: f.id,
+        text: f.text || f.place_name,
+        place_name: f.place_name,
+        center: f.center || f.geometry?.coordinates || [0, 0],
+      }));
+    }
+    return getMockPlaces(query);
   } catch (error) {
-    console.error('Error fetching from Mapbox:', error);
+    console.error('Error fetching from MapTiler geocoding:', error);
     return getMockPlaces(query);
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { usePlaceStore } from '../../../../store/usePlaceStore';
 import { useListStore } from '../../../../store/useListStore';
@@ -12,10 +12,7 @@ import { downloadTilePack, deleteTilePack } from '../../../../lib/services/offli
 import { cachePlaces, getCachedPlaces, setListOfflineCached } from '../../../../lib/db/offlineCache';
 import { useNetworkStatus } from '../../../../hooks/useNetworkStatus';
 import { useUser } from '@clerk/expo';
-import Mapbox from '@rnmapbox/maps';
 import { RoomProvider, useOthers, useBroadcastEvent, useEventListener } from '../../../../lib/liveblocks';
-
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN!);
 
 export default function ListDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -152,9 +149,9 @@ function ListDetailScreenContent({ id }: { id: string }) {
   }
 
   // Calculate bounds to focus the map initially
-  const mapCenter = places.length > 0 && places[0].lat && places[0].lng 
+  const mapCenter: [number, number] = places.length > 0 && places[0].lat && places[0].lng 
     ? [places[0].lng, places[0].lat] 
-    : undefined;
+    : [-122.4194, 37.7749];
 
   return (
     <View style={styles.container}>
@@ -203,49 +200,68 @@ function ListDetailScreenContent({ id }: { id: string }) {
       )}
 
       <View style={styles.mapContainer}>
-        <Mapbox.MapView style={styles.map} scaleBarEnabled={false} logoEnabled={false} compassEnabled={true}>
-          <Mapbox.Camera
-            zoomLevel={12}
-            centerCoordinate={mapCenter}
-            animationMode="flyTo"
-            animationDuration={1000}
-          />
-          
-          {routeGeometry && (
-            <Mapbox.ShapeSource id="routeSource" shape={routeGeometry}>
-              <Mapbox.LineLayer
-                id="routeLine"
-                style={{
-                  lineColor: colors.rausch,
-                  lineWidth: 4,
-                  lineJoin: 'round',
-                  lineCap: 'round'
-                }}
-              />
-            </Mapbox.ShapeSource>
-          )}
-
-          {places.filter(p => p.lat && p.lng).map((place) => {
-            const isRoutePlace = place.inRoute;
-            const routeIndex = routePlaces.findIndex(rp => rp.id === place.id) + 1;
-            
+        {Platform.OS === 'web' ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16, backgroundColor: '#f0f0f0' }}>
+            <Text style={{ color: colors.muted, textAlign: 'center', marginBottom: 4, fontWeight: 'bold' }}>MapLibre Native Map</Text>
+            <Text style={{ color: colors.muted, textAlign: 'center', fontSize: 12 }}>Open in Android or iOS Development Build to view native map.</Text>
+          </View>
+        ) : process.env.EXPO_PUBLIC_MAPTILER_API_KEY ? (
+          (() => {
+            const { Map, Camera, Marker, GeoJSONSource, Layer } = require('@maplibre/maplibre-react-native');
             return (
-              <Mapbox.PointAnnotation
-                key={place.id}
-                id={place.id}
-                coordinate={[place.lng!, place.lat!]}
+              <Map
+                style={styles.map}
+                mapStyle={`https://api.maptiler.com/maps/streets-v2/style.json?key=${process.env.EXPO_PUBLIC_MAPTILER_API_KEY}`}
               >
-                <View style={[styles.marker, isRoutePlace ? styles.markerRoute : styles.markerInactive]}>
-                  {isRoutePlace ? (
-                    <Text style={styles.markerText}>{routeIndex}</Text>
-                  ) : (
-                    <View style={styles.markerDot} />
-                  )}
-                </View>
-              </Mapbox.PointAnnotation>
+                <Camera
+                  initialViewState={{
+                    center: mapCenter,
+                    zoom: 12,
+                  }}
+                />
+                
+                {routeGeometry && (
+                  <GeoJSONSource id="routeSource" data={routeGeometry as any}>
+                    <Layer
+                      id="routeLine"
+                      type="line"
+                      style={{
+                        lineColor: colors.rausch,
+                        lineWidth: 4,
+                        lineJoin: 'round',
+                        lineCap: 'round'
+                      }}
+                    />
+                  </GeoJSONSource>
+                )}
+
+                {places.filter(p => p.lat && p.lng).map((place) => {
+                  const isRoutePlace = place.inRoute;
+                  const routeIndex = routePlaces.findIndex(rp => rp.id === place.id) + 1;
+                  
+                  return (
+                    <Marker
+                      key={place.id}
+                      lngLat={[place.lng!, place.lat!]}
+                    >
+                      <View style={[styles.marker, isRoutePlace ? styles.markerRoute : styles.markerInactive]}>
+                        {isRoutePlace ? (
+                          <Text style={styles.markerText}>{routeIndex}</Text>
+                        ) : (
+                          <View style={styles.markerDot} />
+                        )}
+                      </View>
+                    </Marker>
+                  );
+                })}
+              </Map>
             );
-          })}
-        </Mapbox.MapView>
+          })()
+        ) : (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16, backgroundColor: '#f0f0f0' }}>
+            <Text style={{ color: colors.muted, textAlign: 'center' }}>MapTiler API Key required</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.listContainer}>

@@ -1,5 +1,3 @@
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN!;
-
 export type RouteGeometry = {
   type: 'LineString';
   coordinates: number[][];
@@ -11,12 +9,13 @@ export async function getRoute(coordinates: { lat: number; lng: number }[]): Pro
   // Directions API expects coordinates in longitude,latitude format
   const coordString = coordinates.map(c => `${c.lng},${c.lat}`).join(';');
   
-  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordString}?geometries=geojson&access_token=${MAPBOX_TOKEN}`;
+  // Use open OSRM routing engine (returns GeoJSON LineString geometry)
+  const url = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Mapbox API error: ${response.status}`);
+      throw new Error(`Routing API error: ${response.status}`);
     }
     
     const data = await response.json();
@@ -26,7 +25,7 @@ export async function getRoute(coordinates: { lat: number; lng: number }[]): Pro
     
     return null;
   } catch (error) {
-    console.error('Error fetching Mapbox route:', error);
+    console.error('Error fetching route:', error);
     return null;
   }
 }
