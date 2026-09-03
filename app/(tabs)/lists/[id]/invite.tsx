@@ -1,103 +1,85 @@
-// TODO: Restore after Google sign-in is verified
-// import React, { useEffect, useState } from 'react';
-// import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-// import { useLocalSearchParams, useRouter } from 'expo-router';
-// import { useAuth } from '../../../../context/AuthContext';
-// import { authFetch } from '../../../../lib/session';
-// import { colors } from '../../../../constants/colors';
-// import { typography } from '../../../../constants/typography';
-//
-// export default function InviteScreen() {
-//   const { id } = useLocalSearchParams<{ id: string }>();
-//   const { user, isLoaded, isSignedIn } = useAuth();
-//   const router = useRouter();
-//
-//   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-//   const [errorMessage, setErrorMessage] = useState('');
-//
-//   useEffect(() => {
-//     async function processInvite() {
-//       if (!isLoaded) return;
-//
-//       if (!isSignedIn || !user?.id) {
-//         setStatus('error');
-//         setErrorMessage('You need to sign in to join this list.');
-//         return;
-//       }
-//
-//       if (!id) {
-//         setStatus('error');
-//         setErrorMessage('Invalid invite link.');
-//         return;
-//       }
-//
-//       try {
-//         const res = await authFetch('/api/invite', {
-//           method: 'POST',
-//           body: JSON.stringify({ listId: id, role: 'editor' }),
-//         });
-//         if (!res.ok) { throw new Error('Failed to join list'); }
-//         setStatus('success');
-//         setTimeout(() => { router.replace(`/lists/${id}`); }, 1500);
-//       } catch (err) {
-//         console.error(err);
-//         setStatus('error');
-//         setErrorMessage('Failed to join the list. You might already be a member or the link is invalid.');
-//       }
-//     }
-//
-//     processInvite();
-//   }, [id, user?.id, isLoaded, isSignedIn]);
-//
-//   return (
-//     <View style={styles.container}>
-//       {status === 'loading' && (
-//         <>
-//           <ActivityIndicator size="large" color={colors.rausch} />
-//           <Text style={styles.text}>Joining list...</Text>
-//         </>
-//       )}
-//       {status === 'success' && (
-//         <>
-//           <Text style={styles.successText}>🎉 Successfully joined!</Text>
-//           <Text style={styles.text}>Taking you to the list...</Text>
-//         </>
-//       )}
-//       {status === 'error' && (
-//         <>
-//           <Text style={styles.errorText}>Oops!</Text>
-//           <Text style={styles.text}>{errorMessage}</Text>
-//           <TouchableOpacity style={styles.button} onPress={() => router.replace('/lists')}>
-//             <Text style={styles.buttonText}>Go to My Lists</Text>
-//           </TouchableOpacity>
-//         </>
-//       )}
-//     </View>
-//   );
-// }
-//
-// const styles = StyleSheet.create({
-//   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceSoft, padding: 24 },
-//   text: { marginTop: 16, fontSize: 16, fontFamily: typography.medium, color: colors.ink, textAlign: 'center' },
-//   successText: { fontSize: 24, fontFamily: typography.bold, color: colors.rausch, marginBottom: 8 },
-//   errorText: { fontSize: 24, fontFamily: typography.bold, color: colors.primary, marginBottom: 8 },
-//   button: { marginTop: 32, backgroundColor: colors.ink, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-//   buttonText: { color: colors.canvas, fontFamily: typography.bold, fontSize: 16 },
-// });
-
-// --- STUB: Sign-in focus mode ---
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '../../../../context/AuthContext';
+import { authFetch } from '../../../../lib/session';
+import { colors } from '../../../../constants/colors';
+import { typography } from '../../../../constants/typography';
 
 export default function InviteScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { user, isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    async function processInvite() {
+      if (!isLoaded) return;
+
+      if (!isSignedIn || !user?.id) {
+        setStatus('error');
+        setErrorMessage('You need to sign in to join this list.');
+        return;
+      }
+
+      if (!id) {
+        setStatus('error');
+        setErrorMessage('Invalid invite link.');
+        return;
+      }
+
+      try {
+        const res = await authFetch('/api/invite', {
+          method: 'POST',
+          body: JSON.stringify({ listId: id, role: 'editor' }),
+        });
+        if (!res.ok) { throw new Error('Failed to join list'); }
+        setStatus('success');
+        setTimeout(() => { router.replace(`/lists/${id}`); }, 1500);
+      } catch (err) {
+        console.error(err);
+        setStatus('error');
+        setErrorMessage('Failed to join the list. You might already be a member or the link is invalid.');
+      }
+    }
+
+    processInvite();
+  }, [id, user?.id, isLoaded, isSignedIn]);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Invite — stub (sign-in focus mode)</Text>
+      {status === 'loading' && (
+        <>
+          <ActivityIndicator size="large" color={colors.rausch} />
+          <Text style={styles.text}>Joining list...</Text>
+        </>
+      )}
+      {status === 'success' && (
+        <>
+          <Text style={styles.successText}>🎉 Successfully joined!</Text>
+          <Text style={styles.text}>Taking you to the list...</Text>
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <Text style={styles.errorText}>Oops!</Text>
+          <Text style={styles.text}>{errorMessage}</Text>
+          <TouchableOpacity style={styles.button} onPress={() => router.replace('/lists')}>
+            <Text style={styles.buttonText}>Go to My Lists</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f7f7' },
-  text: { fontSize: 16, color: '#888' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceSoft, padding: 24 },
+  text: { marginTop: 16, fontSize: 16, fontFamily: typography.medium, color: colors.ink, textAlign: 'center' },
+  successText: { fontSize: 24, fontFamily: typography.bold, color: colors.rausch, marginBottom: 8 },
+  errorText: { fontSize: 24, fontFamily: typography.bold, color: colors.primary, marginBottom: 8 },
+  button: { marginTop: 32, backgroundColor: colors.ink, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  buttonText: { color: colors.canvas, fontFamily: typography.bold, fontSize: 16 },
 });
