@@ -78,65 +78,9 @@
 
 // --- STUB: Sign-in focus mode ---
 import React from 'react';
-<<<<<<< HEAD
-import { StyleSheet, View, Text, SafeAreaView, Platform } from 'react-native';
-import { colors } from '../../constants/colors';
-
-import * as MapLibre from '@maplibre/maplibre-react-native';
-
-const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
-
-// Default location: San Francisco [Longitude, Latitude]
-const DEFAULT_CENTER: [number, number] = [-122.4194, 37.7749];
-const DEFAULT_ZOOM = 12;
-
-export default function MapScreen() {
-  if (Platform.OS === 'web') {
-    return (
-      <SafeAreaView style={styles.errorContainer}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Native Map (Mobile Only)</Text>
-          <Text style={styles.errorMessage}>
-            MapLibre vector maps require native Android or iOS code.
-          </Text>
-          <Text style={styles.errorMessage}>
-            Run <Text style={styles.codeText}>npx expo run:android</Text> on an Android emulator or device to view the map.
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Dynamically require native components on Android and iOS only
-  const maplibre = MapLibre;
-  console.log('MapLibre import result:', maplibre);
-  const { Map, Camera, Marker } = maplibre || {};
-
-  const styleUrl = MAPTILER_API_KEY
-    ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_API_KEY}`
-    : null;
-
-  if (!styleUrl) {
-    return (
-      <SafeAreaView style={styles.errorContainer}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>MapTiler API Key Missing</Text>
-          <Text style={styles.errorMessage}>
-            Please add your MapTiler API key to the <Text style={styles.codeText}>.env</Text> file as:
-          </Text>
-          <View style={styles.codeBlock}>
-            <Text style={styles.codeText}>EXPO_PUBLIC_MAPTILER_API_KEY=your_key_here</Text>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-=======
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function MapScreen() {
->>>>>>> 483d6d7439c8a34e2b9f5f4c269d2b6e5f7996fc
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Map — stub (sign-in focus mode)</Text>

@@ -1,50 +1,3 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useUser } from '@clerk/expo';
-import { List } from '../../types';
-import { colors } from '../../constants/colors';
-import { typography } from '../../constants/typography';
-import { MaterialIcons } from '@expo/vector-icons';
-
-export default function ChooseListScreen() {
-  const { sharedUrl } = useLocalSearchParams<{ sharedUrl: string }>();
-  const router = useRouter();
-  const { user } = useUser();
-  const [lists, setLists] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (user?.id) {
-      loadLists();
-    }
-  }, [user?.id]);
-
-  const loadLists = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`/api/lists?clerkId=${encodeURIComponent(user!.id)}`);
-      if (!res.ok) throw new Error('Failed to fetch lists');
-      const data = await res.json();
-      setLists(data.lists || []);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to load lists');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSelectList = (listId: string) => {
-    // Navigate to the add screen with the shared URL
-    router.replace({
-      pathname: '/(tabs)/lists/[id]/add',
-      params: { id: listId, sharedUrl: sharedUrl || '' }
-    });
-  };
-
-=======
 // TODO: Restore after Google sign-in is verified
 // import React, { useEffect, useState } from 'react';
 // import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
@@ -146,7 +99,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function ChooseListScreen() {
->>>>>>> 483d6d7439c8a34e2b9f5f4c269d2b6e5f7996fc
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Choose List — stub (sign-in focus mode)</Text>

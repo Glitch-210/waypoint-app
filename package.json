@@ -11,7 +11,6 @@
     "@prisma/client": "5.10.0",
     "@react-native-community/netinfo": "^12.0.1",
     "@types/node": "^26.4.0",
-    "@ungap/structured-clone": "^1.4.0",
     "cheerio": "^1.2.0",
     "expo": "^57.0.1",
     "expo-auth-session": "~57.0.10",
@@ -28,22 +27,15 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-get-random-values": "^2.0.0",
-    "react-native-safe-area-context": "~5.7.0",
     "react-native-svg": "^15.15.5",
     "react-native-web": "^0.21.2",
-<<<<<<< HEAD
-    "text-encoding": "^0.7.0"
-=======
     "zustand": "^5.0.15"
->>>>>>> 483d6d7439c8a34e2b9f5f4c269d2b6e5f7996fc
   },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
-    "lint": "eslint . --ext .ts,.tsx"
+    "web": "expo start --web"
   },
   "private": true,
   "devDependencies": {
