@@ -14,6 +14,23 @@ export interface SyncUserData {
  */
 export async function syncUserToNeon(userData: SyncUserData) {
   try {
+    // If a record with this email already exists, update its googleId and profile
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: userData.email },
+    });
+
+    if (existingByEmail) {
+      return await prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          googleId: userData.googleId,
+          email: userData.email,
+          name: userData.name ?? undefined,
+          avatarUrl: userData.avatarUrl ?? undefined,
+        },
+      });
+    }
+
     const user = await prisma.user.upsert({
       where: { googleId: userData.googleId },
       update: {

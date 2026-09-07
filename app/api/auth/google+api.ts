@@ -1,10 +1,11 @@
 import { OAuth2Client } from 'google-auth-library';
+import { prisma } from '../../../lib/db/prisma';
 import { syncUserToNeon } from '../../../lib/db/syncUser';
 import { signToken } from '../../../lib/auth/jwt';
 
 const webClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID;
-const iosClientId = process.env.GOOGLE_OAUTH_IOS_CLIENT_ID;
-const androidClientId = process.env.GOOGLE_OAUTH_ANDROID_CLIENT_ID;
+const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID || process.env.GOOGLE_OAUTH_IOS_CLIENT_ID;
+const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID || process.env.GOOGLE_OAUTH_ANDROID_CLIENT_ID;
 
 // Build the list of valid audiences for verifyIdToken.
 // At minimum the web client ID is required; native IDs are optional extras.
@@ -32,7 +33,7 @@ function getAudiences(): string[] {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { idToken } = body;
+    const { idToken, mode } = body;
 
     if (!idToken || typeof idToken !== 'string') {
       return Response.json({ error: 'Missing idToken' }, { status: 400 });
@@ -62,6 +63,30 @@ export async function POST(request: Request) {
       return Response.json(
         { error: 'Token missing required claims (sub, email)' },
         { status: 401 }
+      );
+    }
+
+    // --- Check user existence for sign-in / sign-up distinction ---
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId },
+          { email },
+        ],
+      },
+    });
+
+    if (mode === 'signin' && !existingUser) {
+      return Response.json(
+        { error: 'No account found. Please sign up.' },
+        { status: 404 }
+      );
+    }
+
+    if (mode === 'signup' && existingUser) {
+      return Response.json(
+        { error: 'Account already exists. Please sign in.' },
+        { status: 409 }
       );
     }
 

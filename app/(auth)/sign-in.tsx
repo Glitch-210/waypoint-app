@@ -17,7 +17,7 @@ export default function SignInScreen() {
   const router = useRouter();
   const { setUser } = useAuth();
 
-  const { signIn, isLoading, error } = useGoogleAuth((user) => {
+  const { signIn, isLoading, loadingMode, error } = useGoogleAuth((user) => {
     setUser(user);
     router.replace('/(tabs)/lists');
   });
@@ -47,17 +47,35 @@ export default function SignInScreen() {
         <TouchableOpacity
           id="btn-google-sign-in"
           style={[styles.googleButton, isLoading && styles.googleButtonDisabled]}
-          onPress={signIn}
+          onPress={() => signIn('signin')}
           disabled={isLoading}
           activeOpacity={0.8}
         >
-          {isLoading ? (
+          {isLoading && loadingMode === 'signin' ? (
             <ActivityIndicator size="small" color={colors.muted} style={{ marginRight: 10 }} />
           ) : (
             <FontAwesome name="google" size={18} color="#4285F4" style={styles.googleIcon} />
           )}
           <Text style={styles.googleButtonText}>
-            {isLoading ? 'Signing in…' : 'Continue with Google'}
+            {isLoading && loadingMode === 'signin' ? 'Signing in…' : 'Sign In with Google'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Google Sign-Up Button */}
+        <TouchableOpacity
+          id="btn-google-sign-up"
+          style={[styles.googleSignUpButton, isLoading && styles.googleButtonDisabled]}
+          onPress={() => signIn('signup')}
+          disabled={isLoading}
+          activeOpacity={0.8}
+        >
+          {isLoading && loadingMode === 'signup' ? (
+            <ActivityIndicator size="small" color={colors.canvas} style={{ marginRight: 10 }} />
+          ) : (
+            <FontAwesome name="google" size={18} color={colors.canvas} style={styles.googleIcon} />
+          )}
+          <Text style={styles.googleSignUpButtonText}>
+            {isLoading && loadingMode === 'signup' ? 'Creating account…' : 'Sign Up with Google'}
           </Text>
         </TouchableOpacity>
 
@@ -162,6 +180,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: typography.semibold,
     color: colors.ink,
+  },
+  googleSignUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.rausch,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    width: '100%',
+    marginTop: 12,
+    shadowColor: colors.rausch,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  googleSignUpButtonText: {
+    fontSize: 16,
+    fontFamily: typography.semibold,
+    color: colors.canvas,
   },
   legal: {
     marginTop: 20,
